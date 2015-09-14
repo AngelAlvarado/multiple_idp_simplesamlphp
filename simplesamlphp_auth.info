@@ -1,0 +1,11 @@
+name = simpleSAMLphp authentication
+description = Allows users to authenticate to a remote SAML identity provider (IdP) via a locally configured SimpleSAMLphp service point (SP).
+core = 7.x
+configure = admin/config/people/simplesamlphp_auth
+
+; Information added by Drupal.org packaging script on 2014-09-30
+version = "7.x-3.x-dev"
+core = "7.x"
+project = "simplesamlphp_auth"
+datestamp = "1412079551"
+
