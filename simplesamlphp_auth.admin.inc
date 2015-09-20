@@ -30,7 +30,7 @@ function simplesamlphp_auth_settings() {
     $simplesamlphp_auth_saml_version = SimpleSAML_Drupal::factory()->getSimpleSAMLVersion();
   } catch (Exception $e) {
     watchdog_exception('simplesamlphp_auth', $e);
-    drupal_set_message($e->getMessage(), 'error');
+    drupal_set_message(t($e->getMessage()), 'error');
   } // end try - catch
   if (!empty($simplesamlphp_auth_saml_version)) {
     $ver = explode('.', $simplesamlphp_auth_saml_version);
@@ -138,7 +138,7 @@ function simplesamlphp_auth_idp_settings() {
     $simplesamlphp_auth_saml_version = SimpleSAML_Drupal::factory()->getSimpleSAMLVersion();
   } catch (Exception $e) {
     watchdog_exception('simplesamlphp_auth', $e);
-    drupal_set_message($e->getMessage(), 'error');
+    drupal_set_message(t($e->getMessage()), 'error');
   } // end try - catch
   if (!empty($simplesamlphp_auth_saml_version)) {
     $ver = explode('.', $simplesamlphp_auth_saml_version);
