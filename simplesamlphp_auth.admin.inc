@@ -26,7 +26,12 @@ module_load_include('inc', 'simplesamlphp_auth', 'includes/simplesamlphp_auth.dr
  */
 function simplesamlphp_auth_settings() {
   global $base_url;
-  $simplesamlphp_auth_saml_version = SimpleSAML_Drupal::factory()->getSimpleSAMLVersion();
+  try {
+    $simplesamlphp_auth_saml_version = SimpleSAML_Drupal::factory()->getSimpleSAMLVersion();
+  } catch (Exception $e) {
+    watchdog_exception('simplesamlphp_auth', $e);
+    drupal_set_message($e->getMessage(), 'error');
+  } // end try - catch
   if (!empty($simplesamlphp_auth_saml_version)) {
     $ver = explode('.', $simplesamlphp_auth_saml_version);
     if (!($ver[0] >= 1 && $ver[1] >= 5)) {
@@ -129,7 +134,12 @@ function simplesamlphp_auth_settings() {
  */
 function simplesamlphp_auth_idp_settings() {
   global $base_url;
-  $simplesamlphp_auth_saml_version = SimpleSAML_Drupal::factory()->getSimpleSAMLVersion();
+  try {
+    $simplesamlphp_auth_saml_version = SimpleSAML_Drupal::factory()->getSimpleSAMLVersion();
+  } catch (Exception $e) {
+    watchdog_exception('simplesamlphp_auth', $e);
+    drupal_set_message($e->getMessage(), 'error');
+  } // end try - catch
   if (!empty($simplesamlphp_auth_saml_version)) {
     $ver = explode('.', $simplesamlphp_auth_saml_version);
     if (!($ver[0] >= 1 && $ver[1] >= 5)) {
