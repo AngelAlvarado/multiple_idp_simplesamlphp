@@ -209,29 +209,33 @@ function simplesamlphp_auth_permission() {
  * Implements hook_user_logout().
  */
 function simplesamlphp_auth_user_logout($account) {
-  global $user;
-  global $base_url;
-  try {
-    $simplesamlphp_drupal = SimpleSAML_Drupal::factory();
-    $simplesamlphp_drupal->load();
-    $simplesamlphp_auth_as = $simplesamlphp_drupal->getSimpleSAMLAuthSimple();
-    $simplesamlphp_auth_saml_attributes = $simplesamlphp_drupal->getAttrsFromAssertion();
-  } catch (Exception $e) {
-    watchdog_exception('simplesamlphp', $e);
-  } // end try - catch
+  if(isset( $_COOKIE['_lta'] ) && $_COOKIE['_lta']){
+    $idp = (int) filter_xss(($_COOKIE['_lta']));
+    $idp_record = db_query('SELECT source_name FROM {saml_idp_settings} WHERE id = :id',array(':id' => $idp))->fetchField();
+    if($idp_record){
+      try {
+        $simplesamlphp_drupal = SimpleSAML_Drupal::factory();
+        $simplesamlphp_drupal->load($idp);
+        $simplesamlphp_auth_as = $simplesamlphp_drupal->getSimpleSAMLAuthSimple();
+        $simplesamlphp_auth_saml_attributes = $simplesamlphp_drupal->getAttrsFromAssertion();
+      } catch (Exception $e) {
+        watchdog_exception('simplesamlphp', $e);
+      } // end try - catch
 
-  if (!empty($simplesamlphp_auth_saml_attributes)) {
-    /**
-     * KLUDGE: for some reason Drupal is not killing the session, even if I were to
-     * call drupal_session_destroy_uid() here.
-     */
-    session_destroy();
-    $gotourl = base_path();
-    if (variable_get('simplesamlphp_auth_logoutgotourl', '')) {
-      $gotourl = variable_get('simplesamlphp_auth_logoutgotourl', '');
-    } // end if
-    $simplesamlphp_auth_as->logout($gotourl);
-  } // end if
+      if (!empty($simplesamlphp_auth_saml_attributes)) {
+        /**
+         * KLUDGE: for some reason Drupal is not killing the session, even if I were to
+         * call drupal_session_destroy_uid() here.
+         */
+        session_destroy();
+        $gotourl = base_path();
+        if (variable_get('simplesamlphp_auth_logoutgotourl', '')) {
+          $gotourl = variable_get('simplesamlphp_auth_logoutgotourl', '');
+        } // end if
+        $simplesamlphp_auth_as->logout($gotourl);
+      } // end if
+    }
+  }
 }
 /**
  * Implements hook_user_delete().
