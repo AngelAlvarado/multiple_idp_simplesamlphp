@@ -2,6 +2,8 @@
  * On restricted modal window (if the user is anonymous)
  * check if they have the idp cookie to iniciate the sso process
  * @check module that generates the modal window
+ * @todo change the name of this file to 'autoredirec'
+ * @todo in the UI add a list of URLs where this will be added
  */
 var sso = getCookie("_lta");
 if (sso != "") {

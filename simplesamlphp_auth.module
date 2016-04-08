@@ -26,158 +26,81 @@ module_load_include('inc', 'simplesamlphp_auth', 'includes/simplesamlphp_auth.dr
  * Implements hook_menu().
  */
 function simplesamlphp_auth_menu() {
-  $items = array();
+  $items = [];
 
-  $items['admin/config/people/simplesamlphp_auth'] = array(
+  $items['admin/config/people/simplesamlphp_auth'] = [
     'title' => 'Simple SAML Auth Settings',
     'description' => 'Control the various settings of the simpleSAMLphp authentication module',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('simplesamlphp_auth_settings'),
-    'access arguments' => array('administer simpleSAMLphp authentication'),
-    'file' => 'simplesamlphp_auth.admin.inc'
-  );
-  $items['admin/config/people/simplesamlphp_auth/default'] = array(
+    'page arguments' => ['simplesamlphp_auth_settings'],
+    'access arguments' => ['administer simpleSAMLphp authentication'],
+    'file' => 'simplesamlphp_auth.admin.inc',
+  ];
+  $items['admin/config/people/simplesamlphp_auth/default'] = [
     'title' => 'SAML Auth Settings',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10
-  );
-  $items['admin/config/people/simplesamlphp_auth/idp'] = array(
+  ];
+  $items['admin/config/people/simplesamlphp_auth/idp'] = [
     'title' => 'IDP Auth Settings',
     'description' => 'Provides a form with settings to manage IDP entries',
     'type' => MENU_LOCAL_TASK,
     'page callback' => 'simplesamlphp_auth_idp_settings',
-    'access arguments' => array('administer simpleSAMLphp authentication'),
+    'access arguments' => ['administer simpleSAMLphp authentication'],
     'file' => 'simplesamlphp_auth.admin.inc',
-  );
-  $items['admin/config/people/simplesamlphp_auth/%ssaml_auth'] = array(
+  ];
+  $items['admin/config/people/simplesamlphp_auth/%ssaml_auth'] = [
     'title' => 'SimpleSAML PHP Authentication',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('simplesamlphp_auth_form', 4),
-    'access arguments' => array('administer simpleSAMLphp authentication'),
+    'page arguments' => ['simplesamlphp_auth_form', 4],
+    'access arguments' => ['administer simpleSAMLphp authentication'],
     'file' => 'simplesamlphp_auth.admin.inc',
-  );
-  $items['admin/config/people/simplesamlphp_auth/%ssaml_auth/edit'] = array(
+  ];
+  $items['admin/config/people/simplesamlphp_auth/%ssaml_auth/edit'] = [
     'title' => 'IDP Edit Auth Settings',
     'type' => MENU_DEFAULT_LOCAL_TASK,
-  );
-  $items['admin/config/people/simplesamlphp_auth/%ssaml_auth/delete'] = array(
+  ];
+  $items['admin/config/people/simplesamlphp_auth/%ssaml_auth/delete'] = [
     'title' => 'IDP Delete Auth Settings',
     'type' => MENU_CALLBACK,
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('simplesamlphp_auth_delete', 4),
-    'access arguments' => array('administer simpleSAMLphp authentication'),
+    'page arguments' => ['simplesamlphp_auth_delete', 4],
+    'access arguments' => ['administer simpleSAMLphp authentication'],
     'file' => 'simplesamlphp_auth.admin.inc',
-  );
-  $items['saml_login/%ssaml_auth'] = array(
+  ];
+  $items['saml_login/%ssaml_auth'] = [
     'title' => 'Logon to the site',
     'type' => MENU_CALLBACK,
     'page callback' => 'simplesamlphp_auth_loginpage',
-    'page arguments' => array(1),
+    'page arguments' => [1],
     'access callback' => TRUE,
     'file' => 'simplesamlphp_auth.pages.inc',
-  );
-  $items['saml_redirect'] = array(
+  ];
+  $items['saml_redirect'] = [
     'type' => MENU_CALLBACK,
     'page callback' => '_saml_redirect',
     'access callback' => TRUE,
     'delivery callback' => '_saml_redirection_delivery',
-  );
+    'file' => 'simplesamlphp_auth.pages.inc',
+  ];
   return $items;
 }
+
 /**
- * This method exists only to have a page callback when the process redirects the user
- * to the IDP page
- */
-function _saml_redirect() {
-  /**
-   * No need to restrict access
-   */
-  return true;
-}
-/**
- * Create a page to redirect SSO users
- * Background: Using out entry point saml_login/#idp works smoothly, however
- * there are text editors (e.g. M. W.) that truncate our URLs( When for some reason
- * URLs are more than 600 charactes long), this is a problem because we lost vital data in the URL
+ * Loads an IDP from the database.
  *
- * Thanks to Kendall Bullen, we create this new entrypoint which works as a redirection URL, in this
- * the URL lenghts are manage by Drupal(PHP) and are not truncate by MS
- *
- * @param  Bool $page_callback_result use has access to this url?
- * @return redirect user
- */
-function _saml_redirection_delivery($page_callback_result) {
-
-  if (isset( $_GET['s']) && $page_callback_result) {
-    global $base_url;
-    drupal_add_http_header('Content-Type', 'text/html; UTF-8');
-    drupal_add_http_header('Connection', 'keep-alive');
-    drupal_add_http_header('Content-Language', 'en');
-
-    $idp = $_GET['s'];
-    $get_d = drupal_get_destination();
-    if( isset( $_GET['destination'] ) ){
-      $dest = ltrim($get_d['destination'], '/');
-      if (strpos($get_d['destination'],'esq=') !== false) {
-        /**
-         * We must encode the destination parameter to let know the idP where to come back.
-         * @var [type]
-         */
-        $dest = drupal_encode_path($dest);
-      }
-    } else {
-      $dest = '';
-    }
-    $meta_saml = array(
-    '#type' => 'html_tag',
-    '#tag' => 'meta',
-    '#attributes' => array(
-      'content' =>  "0; url=/saml_login/" . $idp ."?destination=" . $dest,
-      'http-equiv' => 'refresh',
-    ),
-    '#weight' => '-99999',
-    );
-    drupal_add_html_head($meta_saml, 'meta_saml');
-    $tags = array('center','span');
-    print drupal_render_page(filter_xss('<center><span style="font-size:16.0pt;font-family:"Calibri",sans-serif">Redirecting now, please wait....</span></center>', $tags));
-    drupal_page_footer();
-  } else {
-     // Print a 403 page.
-      drupal_add_http_header('Status', '403 Forbidden');
-      watchdog('access denied', check_plain($_GET['q']), NULL, WATCHDOG_WARNING);
-
-      // Keep old path for reference, and to allow forms to redirect to it.
-      if (!isset($_GET['destination'])) {
-        $_GET['destination'] = $_GET['q'];
-      }
-
-      $path = drupal_get_normal_path(variable_get('site_403', ''));
-      if ($path && $path != $_GET['q']) {
-        // Custom 403 handler. Set the active item in case there are tabs to
-        // display or other dependencies on the path.
-        menu_set_active_item($path);
-        $return = menu_execute_active_handler($path, FALSE);
-      }
-
-      if (empty($return) || $return == MENU_NOT_FOUND || $return == MENU_ACCESS_DENIED) {
-        // Standard 403 handler.
-        drupal_set_title(t('Access denied'));
-        $return = t('You are not authorized to access this page.');
-      }
-      print drupal_render_page($return);
-  }
-}
-/**
- * Loads an IDP from the database, the method retrieves the ID of the IDP
+ * The method retrieves the ID of the IDP
  * created on Drupal from the URL using hook_menu
  */
 function ssaml_auth_load($id) {
   if (!is_numeric($id)) {
     return FALSE;
-  } // end if
-  watchdog('simplesamlphp_auth', 'Load %id', array('%id' => $id), WATCHDOG_DEBUG);
+  }
+  // End if.
+  watchdog('simplesamlphp_auth', 'Load IdP with %id', array('%id' => $id), WATCHDOG_DEBUG);
   return db_query("SELECT * FROM {saml_idp_settings} WHERE id = :id", array(':id' => $id))->fetchObject();
 }
+
 /**
  * Implements hook_admin_paths().
  */
@@ -192,7 +115,8 @@ function simplesamlphp_auth_help($path, $arg) {
     case 'admin/config/people/simplesamlphp_auth':
       $output = t('<p>This module integrates Drupal with a SAML PHP Service Points (SP), effectively federating Drupal.</p>');
       return $output;
-  } // end switch
+  }
+  // End switch.
 }
 /**
  * Implements hook_permission().
@@ -205,22 +129,27 @@ function simplesamlphp_auth_permission() {
     ),
   );
 }
+
 /**
  * Implements hook_user_logout().
+ *
+ * Log out user from Drupal and IdP (If SP is configured to do so)
  */
-function simplesamlphp_auth_user_logout($account) {
-  if(isset( $_COOKIE['_lta'] ) && $_COOKIE['_lta']){
+function simplesamlphp_auth_user_logout() {
+  if (isset($_COOKIE['_lta']) && $_COOKIE['_lta'] && $_COOKIE['_lta'] == filter_xss($_COOKIE['_lta'])) {
     $idp = (int) filter_xss(($_COOKIE['_lta']));
-    $idp_record = db_query('SELECT source_name FROM {saml_idp_settings} WHERE id = :id',array(':id' => $idp))->fetchField();
-    if($idp_record){
+    $idp_record = db_query('SELECT source_name FROM {saml_idp_settings} WHERE id = :id', array(':id' => $idp))->fetchField();
+    if ($idp_record) {
       try {
         $simplesamlphp_drupal = SimpleSAML_Drupal::factory();
         $simplesamlphp_drupal->load($idp);
         $simplesamlphp_auth_as = $simplesamlphp_drupal->getSimpleSAMLAuthSimple();
         $simplesamlphp_auth_saml_attributes = $simplesamlphp_drupal->getAttrsFromAssertion();
-      } catch (Exception $e) {
-        watchdog_exception('simplesamlphp', $e);
-      } // end try - catch
+      }
+      catch (Exception $e) {
+        watchdog_exception('simplesamlphp', $e, 'Error logging out user from IdP !id', array('!id' => $idp));
+      }
+      // End try - catch.
 
       if (!empty($simplesamlphp_auth_saml_attributes)) {
         /**
@@ -231,18 +160,22 @@ function simplesamlphp_auth_user_logout($account) {
         $gotourl = base_path();
         if (variable_get('simplesamlphp_auth_logoutgotourl', '')) {
           $gotourl = variable_get('simplesamlphp_auth_logoutgotourl', '');
-        } // end if
+        }
+        // End if.
         $simplesamlphp_auth_as->logout($gotourl);
-      } // end if
+      }
+      // End if.
     }
   }
 }
+
 /**
  * Implements hook_user_delete().
  */
 function simplesamlphp_auth_user_delete($account) {
   db_delete('authmap')->condition('uid', $account->uid)->condition('authname', $account->name)->execute();
 }
+
 /**
  * Implements hook_form_alter().
  * Change form themes on registration and profile pages.
@@ -255,44 +188,53 @@ function simplesamlphp_auth_form_alter(&$form, $form_state, $form_id) {
 
   try {
     SimpleSAML_Drupal::factory();
-  } catch (Exception $e) {
+  }
+  catch (Exception $e) {
     watchdog_exception('simplesamlphp_auth', $e);
-  } // end try - catch
+  }
+  // End try - catch.
 
   /**
    * If the user has a simplesamlphp_auth authmap record, then don't require them to know their Drupal password.
    * This will allow them to change their e-mail address, and set a Drupal password if they want to (and are allowed).
    */
-  if((isset( $form['#user']->init) && $form['#user']->init) &&
-      (_simplesaml_auth_user_has_authmap( $form['#user']->init) && $form_id == 'user_profile_form')) {
-    unset( $form['account']['current_pass'] );
-    unset( $form['account']['current_pass_required_values'] );
-    $form['#validate'] = array_diff($form['#validate'], array( 'user_validate_current_pass'));
+  if ((isset($form['#user']->init) && $form['#user']->init) &&
+    (_simplesaml_auth_user_has_authmap($form['#user']->init) && $form_id == 'user_profile_form')
+  ) {
+    unset($form['account']['current_pass']);
+    unset($form['account']['current_pass_required_values']);
+    $form['#validate'] = array_diff($form['#validate'], array('user_validate_current_pass'));
 
     // If the user is a simplesamlphp_auth user and is NOT allowed to set their Drupal password, remove the fields from the form.
-    if( !variable_get( 'simplesamlphp_auth_allowsetdrupalpwd' ) ) {
-      unset( $form['account']['pass'] );
-    } // end if
-  } // end if
+    if (!variable_get('simplesamlphp_auth_allowsetdrupalpwd')) {
+      unset($form['account']['pass']);
+    }
+    // End if.
+  }
+  // End if.
 
   /**
    * We don't need to add a Federated Login anymore .. the modified version of the Login form is already
+   * @todo remove this function
    * taking care of redirecting the user to the appropiated IDP
    */
 }
-/****************************************************************************
- * Private functions ********************************************************
- ****************************************************************************/
+
 /**
  * Forces HTTPS connections.
  */
-function _simplesamlphp_auth_forcehttps_rewrite( $url ) {
+function _simplesamlphp_auth_forcehttps_rewrite($url) {
   if (variable_get('simplesamlphp_auth_forcehttps', TRUE)) {
     $url = str_replace('http://', 'https://', $url);
     _simplesaml_auth_debug('forcehttps rewrite: ' . $url);
   } // end if
   return $url;
 }
+
+/****************************************************************************
+ * Private functions ********************************************************
+ ****************************************************************************/
+
 /**
  * See if the user has an authmap record for simplesamlphp_auth
  */
@@ -301,7 +243,8 @@ function _simplesaml_auth_user_has_authmap($authname) {
   $return = 0;
   if (is_array($authmaps)) {
     $return = in_array('simplesamlphp_auth', array_keys($authmaps));
-  } // end if
+  }
+  // End if.
   return $return;
 }
 /**
@@ -319,23 +262,24 @@ function _simplesamlphp_auth_destroy_drupal_session() {
 
   // Destroy the current session:
   session_destroy();
-  drupal_save_session( FALSE );
+  drupal_save_session(FALSE);
   // Only variables can be passed by reference workaround.
-  $NULL = NULL;
-  user_module_invoke('logout', $NULL, $user);
+  $null = NULL;
+  user_module_invoke('logout', $null, $user);
   // Load the anonymous user.
   $user = drupal_anonymous_user();
   drupal_goto();
 }
+
 /**
- * Implements hook_form_id_alter
+ * Implements hook_form_FORM_ID_alter().
+ *
  * Changes the logic of the login form
  */
 function simplesamlphp_auth_form_user_login_alter(&$form, &$form_state) {
-  global $base_url;
   $GLOBALS['conf']['cache'] = FALSE;
   if (!array_key_exists("step", $form_state) && empty($form_state['step'])) {
-    //adding a new step 'form-element' to provide a 'multistepform'
+    // Adding a new step 'form-element' to provide a 'multistepform'
     $form_state['step'] = 1;
     $form['next'] = array(
       '#type' => 'submit',
@@ -350,18 +294,40 @@ function simplesamlphp_auth_form_user_login_alter(&$form, &$form_state) {
     $form['actions']['submit']['#access'] = FALSE;
   }
 }
+
 /**
- * Implements hook_init
+ * Implements hook_init().
+ *
+ * Loads javascript to redirecr SSO users to their IdP
+ * This provides a great seemsly deeplink integration
+ * The current URL the user is browsing is taken as
+ * the RelayState parameter
  */
 function simplesamlphp_auth_init() {
   global $base_url;
   if (user_is_anonymous()) {
+    // Javascript code to attach click event to redirect users
+    // to their IdP if the IdP cookie exists.
     drupal_add_js($base_url . '/' . drupal_get_path('module', 'simplesamlphp_auth') . '/theme/login-redirect.js',
-      array('type' => 'file', 'scope' => 'footer', 'weight' => 100, 'group' => JS_THEME, 'requires_jquery' => FALSE));
-  } // end if
-  if($_GET['q'] == 'user') {
+      array(
+            'type'            => 'file',
+            'scope'           => 'footer',
+            'weight'          => 100,
+            'group'           => JS_THEME,
+            'requires_jquery' => FALSE
+      ));
+    // Unccoment redirect.js to take SSO user authomatically
+    // to their IdP (if the IdP cookie exists).
+    // This assumes the SSO user has log in at least once
+    // and cookies haven't been deleted.
+    // @todo add in the UI a list of URLs where this script will be triggered.
+    //drupal_add_js('sites/all/modules/custom/simplesamlphp_auth/theme/redirect.js');
+  }
+  // End if.
+  if ($_GET['q'] == 'user') {
     drupal_page_is_cacheable(FALSE);
-  } // end if
+  }
+  // End if.
 }
 /**
  * Helper funtion to find out the idp domain
@@ -369,15 +335,15 @@ function simplesamlphp_auth_init() {
  */
 function saml_user_submit($form, &$form_state) {
   $mail = $form_state['input']['name'];
-  if (!empty( $mail)){
+  if (!empty($mail)) {
     $mail = check_plain($mail);
-    $domain = substr( strrchr($mail, "@" ), 1);
+    $domain = substr(strrchr($mail, "@"), 1);
     $allowed_chars = preg_replace("/[a-zA-Z\.]/", "", $domain);
     $idpId = 0;
     if (empty($allowed_chars)) {
       $source = db_query("SELECT id, domain FROM saml_idp_settings")->fetchAll();
       foreach ($source as $idp) {
-        if (strpos($domain , $idp->domain) !== false) {
+        if (strpos($domain, $idp->domain) !== FALSE) {
           $idpId = $idp->id;
           break;
         } // end if
@@ -385,9 +351,11 @@ function saml_user_submit($form, &$form_state) {
     } // end if
     if ($idpId) {
       global $base_url;
-      header("Location: " . $base_url . '/saml_login/'.$idpId, TRUE, 301);
+      $base_url_saml = _simplesamlphp_auth_forcehttps_rewrite($base_url);
+      header("Location: " . $base_url_saml . '/saml_login/' . $idpId, TRUE, 301);
       die();
-    } else {
+    }
+    else {
       $form_state['rebuild'] = TRUE;
       return;
     } // end if else

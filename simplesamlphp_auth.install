@@ -6,7 +6,7 @@
  * This module belongs to Andreas Åkre Solberg, Snorre Løvås and Steve Moitozo (Maintenance)
  * the adjustments we're doing is to allow multiple IDPs and SPs on the same website with custom
  * logic from TA
- * @version 7.x.3.5 
+ * @version 7.x.3.5
  * @author Pablo Tapia <pablo.orozco@ingenia.com>
  * @author Angel Alvarado <angel.angelio.ingenia@gmail.com>
  */
@@ -16,56 +16,57 @@
  */
 function simplesamlphp_auth_schema() {
 
-    $schema = array();
+  $schema = array();
 
-    $schema['saml_idp_settings'] = array(
-        'description' => 'The table for SAML IDP configurations ',
-        'fields' => array(
-            'id' => array(
-                'type' => 'serial',
-                'unsigned' => TRUE,
-                'not null' => TRUE,
-                'description' => 'Primary Key.',
-            ),
-            'source_name' => array(
-                'type' => 'varchar',
-                'length' => 150,
-                'not null' => TRUE,
-                'description' => 'Source name for this connection' ,
-            ),
-            'company' => array(
-                'type' => 'varchar',
-                'length' => 150,
-                'not null' => TRUE,
-                'description' => 'Name of the company that\'s the owner of the IDP' ,
-            ),
-            'domain' => array(
-                'type' => 'varchar',
-                'length' => 200,
-                'not null' => TRUE,
-                'description' => 'Compay domain from where the SAML requests will come from'
-            ),
-            'attributes' => array(
-                'type' => 'blob',
-                'not null' => FALSE
-            ),
-            'active' => array(
-                'type' => 'int',
-                'size' => 'tiny',
-                'not null' => TRUE,
-                'default' => 1,
-                'description' => 'Flag to know is a user is active (optional)'
-            ),
-        ),
-        'primary key' => array('id'),
-        'unique keys' => array(
-            'unique_company' => array('company'),
-            'unique_domain' => array('domain'),
-            'unique_srcname' => array('source_name')
-        ),
-    );
-    return $schema;
+  $schema['saml_idp_settings'] = array(
+    'description' => 'The table for SAML IDP configurations ',
+    'fields'      => array(
+      'id'          => array(
+        'type'        => 'serial',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'description' => 'Primary Key.',
+      ),
+      'source_name' => array(
+        'type'        => 'varchar',
+        'length'      => 150,
+        'not null'    => TRUE,
+        'description' => 'Source name for this connection',
+      ),
+      'company'     => array(
+        'type'        => 'varchar',
+        'length'      => 150,
+        'not null'    => TRUE,
+        'description' => 'Name of the company that\'s the owner of the IDP',
+      ),
+      'domain'      => array(
+        'type'        => 'varchar',
+        'length'      => 200,
+        'not null'    => TRUE,
+        'description' => 'Compay domain from where the SAML requests will come from'
+      ),
+      'attributes'  => array(
+        'type'     => 'blob',
+        'not null' => FALSE
+      ),
+      'active'      => array(
+        'type'        => 'int',
+        'size'        => 'tiny',
+        'not null'    => TRUE,
+        'default'     => 1,
+        'description' => 'Flag to know is a user is active (optional)',
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'unique_company' => array('company'),
+      'unique_domain'  => array('domain'),
+      'unique_srcname' => array('source_name'),
+    ),
+  );
+  return $schema;
 }
+
 /**
  * Implements hook_install().
  */
@@ -80,6 +81,7 @@ function simplesamlphp_auth_install() {
   // variable_set( 'user_register', 0 );
   // variable_set( 'simplesamlphp_auth_user_register_original', $original );
 }
+
 /**
  * Implements hook_uninstall().
  */
@@ -88,17 +90,18 @@ function simplesamlphp_auth_uninstall() {
    * We remove the variables that we set on the system settings form
    * @see simplesamlphp_auth_admin.inc
    */
-  variable_del( 'simplesamlphp_auth_activate');
-  variable_del( 'simplesamlphp_auth_installdir' );
-  variable_del( 'simplesamlphp_auth_forcehttps' );
-  variable_del( 'simplesamlphp_auth_registerusers' );
-  variable_del( 'simplesamlphp_auth_allowsetdrupalpwd' );
-  variable_del( 'simplesamlphp_auth_allowdefaultlogin' );
-  variable_del( 'simplesamlphp_auth_allowdefaultloginroles' );
-  variable_del( 'simplesamlphp_auth_allowdefaultloginusers' );
-  variable_del( 'simplesamlphp_auth_logoutgotourl' );
-  
+  variable_del('simplesamlphp_auth_activate');
+  variable_del('simplesamlphp_auth_installdir');
+  variable_del('simplesamlphp_auth_forcehttps');
+  variable_del('simplesamlphp_auth_registerusers');
+  variable_del('simplesamlphp_auth_allowsetdrupalpwd');
+  variable_del('simplesamlphp_auth_allowdefaultlogin');
+  variable_del('simplesamlphp_auth_allowdefaultloginroles');
+  variable_del('simplesamlphp_auth_allowdefaultloginusers');
+  variable_del('simplesamlphp_auth_logoutgotourl');
+
 }
+
 /**
  * Implements hook_requirements().
  */
@@ -112,10 +115,10 @@ function simplesamlphp_auth_requirements($phase) {
         'title'       => 'simpleSAMLphp_auth',
         'value'       => t('SimpleSAMLphp authentication is NOT activated'),
         'description' => t('It can be activated on the !admin_page.', array('!admin_page' => l(t('configuration page'), 'admin/config/people/simplesamlphp_auth'))),
-       );
+      );
     }
 
-    $basedir = variable_get('simplesamlphp_auth_installdir', '/var/simplesamlphp' );
+    $basedir = variable_get('simplesamlphp_auth_installdir', '/var/simplesamlphp');
     if (!file_exists($basedir . '/lib/_autoload.php')) {
       $requirements['simplesamlphp_auth'] = array(
         'severity'    => REQUIREMENT_WARNING,

@@ -1,11 +1,13 @@
 /**
  * Verifies if users have a cookie to trigger the sso login redirect; only for anonymous users
+ * If cookie exist and users click on specific DOM elements then take them to SSO
+ * @todo the CSS IDs are hardcoded here should be added to the UI
  */
 document.addEventListener("DOMContentLoaded", function(e){
   /*
   Gets login button DOM, on clic checks cookie and redirects if necesary
    */
-  var elemm = document.getElementById('login_s');
+  var elemm = document.getElementById('login_s') || document.getElementById('login-link-s');
   try {
     elemm.onclick = function(e) {
         var sso=getCookieLogin("_lta");
