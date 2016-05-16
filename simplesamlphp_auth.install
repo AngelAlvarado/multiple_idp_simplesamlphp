@@ -71,15 +71,10 @@ function simplesamlphp_auth_schema() {
  * Implements hook_install().
  */
 function simplesamlphp_auth_install() {
-  /**
-   * This comes with the module by default but in our case we don't need to disable this
-   * permission since we have all type of users and SAML users will be able to log as regular
-   * users also the user registration process needs to be active for Registered Users
-   */
-  // user_role_revoke_permissions(DRUPAL_AUTHENTICATED_RID, array('change own password'));
-  // $original = variable_get( 'user_register', 1 );
-  // variable_set( 'user_register', 0 );
-  // variable_set( 'simplesamlphp_auth_user_register_original', $original );
+  user_role_revoke_permissions(DRUPAL_AUTHENTICATED_RID, array('change own password'));
+  $original = variable_get( 'user_register', 1 );
+  variable_set( 'user_register', 0 );
+  variable_set( 'simplesamlphp_auth_user_register_original', $original );
 }
 
 /**

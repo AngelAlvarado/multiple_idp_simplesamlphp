@@ -95,8 +95,8 @@ function simplesamlphp_auth_menu() {
 function ssaml_auth_load($id) {
   if (!is_numeric($id)) {
     return FALSE;
-  }
-  // End if.
+  } // end if.
+
   watchdog('simplesamlphp_auth', 'Load IdP with %id', array('%id' => $id), WATCHDOG_DEBUG);
   return db_query("SELECT * FROM {saml_idp_settings} WHERE id = :id", array(':id' => $id))->fetchObject();
 }
@@ -107,6 +107,7 @@ function ssaml_auth_load($id) {
 function simplesamlphp_auth_admin_paths() {
   return array('admin/config/people/simplesamlphp_auth' => TRUE);
 }
+
 /**
  * Implements hook_help().
  */
@@ -118,6 +119,7 @@ function simplesamlphp_auth_help($path, $arg) {
   }
   // End switch.
 }
+
 /**
  * Implements hook_permission().
  */
@@ -208,10 +210,8 @@ function simplesamlphp_auth_form_alter(&$form, $form_state, $form_id) {
     // If the user is a simplesamlphp_auth user and is NOT allowed to set their Drupal password, remove the fields from the form.
     if (!variable_get('simplesamlphp_auth_allowsetdrupalpwd')) {
       unset($form['account']['pass']);
-    }
-    // End if.
-  }
-  // End if.
+    } // End if.
+  } // End if.
 
   /**
    * We don't need to add a Federated Login anymore .. the modified version of the Login form is already
@@ -247,12 +247,14 @@ function _simplesaml_auth_user_has_authmap($authname) {
   // End if.
   return $return;
 }
+
 /**
  * This helper function is used by developers to debug the form API workflow in this module.
  */
 function _simplesaml_auth_debug($message) {
   watchdog('simplesamlphp', $message, NULL, WATCHDOG_DEBUG);
 }
+
 /**
  * Helper function for logging out a user that is has a active session in Drupal but not with simpleSAML.
  */
@@ -329,6 +331,7 @@ function simplesamlphp_auth_init() {
   }
   // End if.
 }
+
 /**
  * Helper funtion to find out the idp domain
  * @return true and redirect users to their idp login
@@ -361,6 +364,7 @@ function saml_user_submit($form, &$form_state) {
     } // end if else
   } // end if - mail
 }
+
 /**
  * Alter the list of projects before fetching data and comparing versions.
  * Disabling updates for this module

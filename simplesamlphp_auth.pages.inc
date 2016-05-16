@@ -27,8 +27,7 @@ function simplesamlphp_auth_loginpage($sp = NULL) {
   }
   catch (Exception $e) {
     watchdog_exception('simplesamlphp_auth', $e);
-  }
-  // End try - catch.
+  } // End try - catch.
 
   $idp_st = !empty($simplesamlphp_drupal->getAuthSourceAttributes()) ? $simplesamlphp_drupal->getAuthSourceAttributes()->id : $sp;
 
@@ -141,7 +140,7 @@ function _saml_redirect() {
  * this usually happens when  URLs are more than 600 charactes long.
  * This is a problem because we lost vital data in the URL
  *
- * Thanks to Kendall Bullen, we create this new entrypoint
+ * We create this new entrypoint
  * which works as a redirection which is used to point deeplinking
  * links to it saml_redirec?s=IdIdP&destination='RelayState'.
  * This way the URL lenghts are manage on Drupal side
