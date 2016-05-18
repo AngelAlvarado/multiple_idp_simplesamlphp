@@ -65,48 +65,6 @@ function _simplesaml_auth_login_register() {
        * identifier, so try to log into Drupal.
        */
       _simplesaml_auth_debug(t('Loading Drupal user [%authname]', ['%authname' => $authname]));
-      // If this is a specific IdP then validate the incoming users
-      // so we migrate them from regular Users to IdP.
-      // @todo make an option in the UI so we validate IdPs without hardcoding.
-      if ($simplesamlphp_drupal->getAuthSourceAttributes()->id == 16) {
-        $mail_attr = !empty($simplesamlphp_drupal->getAuthSourceAttributes()) ? $simplesamlphp_drupal->getAuthSourceAttributes()->mailattr : 'mail';
-        $mail_attr_value = $simplesamlphp_drupal->getAttrsFromAssertion($mail_attr);
-        // Warning: if for some reason the user change her/his email on the IDP side
-        // And the user has a different email in Drupal.
-        // There's no way to match both values (IdP email and Drupal email)
-        // Due the above; Drupal will create a new user and
-        // the old user's preferences will be lost.
-        if (!empty($mail_attr_value)) {
-          $already_user = db_query("SELECT uid,mail FROM {users} WHERE mail = :mail", [":mail" => $mail_attr_value])->fetch();
-          $already_authmap = db_query("SELECT authname FROM {authmap} WHERE authname = :authname", [":authname" => $authname])->fetchField();
-        }
-        // @todo update user's data based on the attributes. Use _simplesaml_auth_user_update
-        if ($already_user && empty($already_authmap)) {
-          $transaction = db_transaction();
-          try{
-            // Don't use user_external_login_register
-            // because data is already in {users}.
-            db_insert("authmap")
-              ->fields([
-                'uid' => $already_user->uid,
-                'authname' => $authname,
-                'module' => 'simplesamlphp_auth',
-              ])->execute();
-            unset($transaction);
-          }
-          catch (Exception $e) {
-            $transaction->rollback();
-            watchdog_exception('simplesamlphp_auth', $e, ' User ' . $already_user->uid . ' IP->SSO migration error ');
-            // @see \SimpleSAML_Drupal::doSanitizeChecking
-            setrawcookie('simplesamlphp_auth_stop_auth', '1', time() + 60 * 60);
-            // Cookie does not make it to the PHP variable.
-            $_COOKIE['simplesamlphp_auth_stop_auth'] = '1';
-            return;
-          }
-          // End try-catch.
-        }
-      }
-
       // Retrieve user mapping and attempt to log the user in.
       $ext_user = user_external_load($authname);
 
@@ -147,6 +105,7 @@ function _simplesaml_auth_user_register($authname) {
   if (variable_get('simplesamlphp_auth_registerusers', TRUE)) {
     // We are allowed to register new users.
     _simplesaml_auth_debug(t('Register [%authname]', array('%authname' => $authname)));
+
     /**
      * It's possible that a user with this name already exists, but is not
      * permitted to login to Drupal via SAML. If so, log out of SAML and
@@ -161,11 +120,6 @@ function _simplesaml_auth_user_register($authname) {
       return FALSE;
     } // end if
 
-    /**
-     * We look for the customer ID attribute inside the SAML implementation .. if there's none then we can't
-     * create the user
-     */
-    if (NULL !== $simplesamlphp_authsource && isset($simplesamlphp_authsource->user_customer_id)) {
       // Register the new user.
       user_external_login_register($authname, 'simplesamlphp_auth');
       _simplesaml_auth_debug(t('Registered [%authname] with uid @uid', array(
@@ -192,7 +146,7 @@ function _simplesaml_auth_user_register($authname) {
          *   $userinfo['field_first_name'] = array(
          *     'und' => array(array('value' => $simplesamlphp_drupal->getAttrsFromAssertion($simplesamlphp_authsource->firstname)))
          *   );
-         * } // end if
+         * }
          */
 
         $user = user_save($user, $userinfo);
@@ -207,14 +161,6 @@ function _simplesaml_auth_user_register($authname) {
         watchdog('simplesamlphp_auth', 'Unable to register %authname using simplesamlphp_auth', array('%authname' => $authname), WATCHDOG_ERROR);
         $simplesamlphp_auth_as->logout(base_path());
       } // end if- else
-    } // end if
-    /**
-     * If we don't have a customer ID attribute then we don't know the products the user can see so we can't
-     * create the account
-     */
-    drupal_set_message(t("We are sorry. There's not enough data in the system to create an account and grant access to the system. Please ask the site administrator to check the attributes assigned to the access."));
-    watchdog('simplesamlphp_auth', 'Unable to register %authname using simplesamlphp_auth no customer id attribute was provided', array('%authname' => $authname), WATCHDOG_ERROR);
-    $simplesamlphp_auth_as->logout(base_path());
   }
   else {
     /**
@@ -225,6 +171,7 @@ function _simplesaml_auth_user_register($authname) {
     $simplesamlphp_auth_as->logout(base_path());
   } // end if - else
 }
+
 /**
  * Updates a SAML authenticated user's account with current username and email.
  *
@@ -265,6 +212,7 @@ function _simplesaml_auth_user_update($account) {
   }
   // End if.
 }
+
 /**
  * Logs a SAML-authenticated user into Drupal.
  *
@@ -301,6 +249,7 @@ function _simplesaml_auth_user_login($ext_user) {
   user_login_finalize($edit);
   return;
 }
+
 /**
  * Denies non-SAML-authenticated access to the site for configured Drupal roles.
  */

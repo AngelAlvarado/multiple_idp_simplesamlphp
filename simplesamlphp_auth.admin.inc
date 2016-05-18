@@ -28,7 +28,8 @@ function simplesamlphp_auth_settings() {
   global $base_url;
   try {
     $simplesamlphp_auth_saml_version = SimpleSAML_Drupal::factory()->getSimpleSAMLVersion();
-  } catch (Exception $e) {
+  }
+  catch (Exception $e) {
     watchdog_exception('simplesamlphp_auth', $e);
     drupal_set_message(t($e->getMessage()), 'error');
   } // end try - catch
@@ -136,7 +137,8 @@ function simplesamlphp_auth_idp_settings() {
   global $base_url;
   try {
     $simplesamlphp_auth_saml_version = SimpleSAML_Drupal::factory()->getSimpleSAMLVersion();
-  } catch (Exception $e) {
+  }
+  catch (Exception $e) {
     watchdog_exception('simplesamlphp_auth', $e);
     drupal_set_message(t($e->getMessage()), 'error');
   } // end try - catch
@@ -229,6 +231,7 @@ function simplesamlphp_auth_form($form, &$form_state, $idp = NULL) {
   if (NULL !== $idp && !empty($idp->attributes)) {
     $attributes = unserialize($idp->attributes);
   } // end if
+
   $form['simplesamlphp_auth_grp_user']['simplesamlphp_auth_user_name'] = array(
     '#type' => 'textfield',
     '#title' => t("Which attribute from the IDP should be used as user's alias"),
@@ -317,7 +320,8 @@ function simplesamlphp_auth_form_submit($form, &$form_state) {
     $query_insert->fields($data);
     $query_insert->execute();
     drupal_set_message(t('New IDP added successfully, don\'t forget to also add the new IDP to the authsources file for simplesamlphp'), 'status');
-  } catch(Exception $e) {
+  }
+  catch(Exception $e) {
     drupal_set_message(t('Something went wrong, message details: %message', array('%message' => $e->getMessage())), 'error');
   } // end try -catch
 }
@@ -372,7 +376,8 @@ function simplesamlphp_auth_delete_submit($form, &$form_state) {
     db_delete('saml_idp_settings')->condition('id', $id)->execute();
     drupal_set_message(t('IDP deleted succesfully' ), 'status');
     $form_state['redirect'] = 'admin/config/people/simplesamlphp_auth/idp';
-  } catch(Exception $e) {
+  }
+  catch(Exception $e) {
     drupal_set_message(t('Something went wrong, message details: %message', array('%message' => $e->getMessage())), 'error');
   } // end try - catch
 }

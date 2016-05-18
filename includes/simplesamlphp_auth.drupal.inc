@@ -40,6 +40,7 @@ class SimpleSAML_Drupal {
 	 * @var object stdClass
 	 */
 	private $_simplesaml_auth_source = NULL;
+
 	/**
 	 * Initializes the instance
 	 */
@@ -49,7 +50,6 @@ class SimpleSAML_Drupal {
 	/**
 	 * Pre-loads the object with the necessary data that will be used
 	 * to execute all SAML related tasks
-	 * @return void
 	 */
 	private function _autoload() {
 		 if ($this->_isEnabled() !== TRUE) {
@@ -69,6 +69,7 @@ class SimpleSAML_Drupal {
   		 $this->_simplesaml_auth_config = SimpleSAML_Configuration::getInstance();
   		 $this->_simplesaml_auth_version = $this->_simplesaml_auth_config->getVersion();
 	}
+
 	/**
 	 * Determines if the simplesaml module / service is active on Drupal
 	 * @param bool $watchdog - Flag that is used to decide if the fail message should go to the watchdog,
@@ -90,7 +91,8 @@ class SimpleSAML_Drupal {
 				return FALSE;
     		} // end if
 			return TRUE;
-  		} else {
+  		}
+		else {
 			if ($watchdog === TRUE) {
 				watchdog('simplesamlphp_auth', 'SimpleSAMLphp is not active. The simplesamlphp_auth module
 						cannot function until is activated, enabling the module is not enough.', NULL, WATCHDOG_WARNING);
@@ -99,6 +101,7 @@ class SimpleSAML_Drupal {
 		} // end if - else
 		return FALSE;
 	}
+
 	/**
 	 * Loads simpleSAMLphp IDP configuration and metadata, we retrieve the data from the
 	 * parameter of the URL (e.g saml_login/%id) the hook menu gets the data and queries
@@ -106,13 +109,15 @@ class SimpleSAML_Drupal {
 	 * easy manipulate. If no IDP value is given the method will load the default SP
 	 * @see simplesamlphp_auth.module - ssaml_auth_load
 	 * @param stdClass $idp - A standard class object with the data of the IDP to load
-	 * @return void
+	 * @return object
+	 * @throws Exception When there's not a valid source to use
 	 */
 	public function load($idp = NULL) {
 		 if (NULL !== $idp && !empty($idp)) {
 			 if (is_object($idp)) {
 				$this->_simplesaml_auth_source = $idp;
-			 } else {
+			 }
+			 else {
 				 $data = db_query("SELECT * FROM {saml_idp_settings} WHERE id = :id", array(':id' => $idp))->fetchObject();
 				 $this->_simplesaml_auth_source = $data;
 			 } // end if - else
@@ -134,19 +139,23 @@ class SimpleSAML_Drupal {
 				 	   $this->_simplesaml_auth_source->{$key} = $data;
     		 	  } // end foreach
 			 	  $sp_name = $this->_simplesaml_auth_source->source_name;
-			 } else {
+			 }
+			 else {
 				 throw new Exception("Unable to continue with SSO process, there's no source available to proceed!");
 			 } // end if - else
-  		  } elseif (isset($_COOKIE['MyIDP']) && (int) $_COOKIE['MyIDP'] > 0) {
+  		  }
+		  elseif (isset($_COOKIE['MyIDP']) && (int) $_COOKIE['MyIDP'] > 0) {
 				// Recursive call
-				return $this->load($COOKIE['MyIDP']);
-  		  } else {
+				return $this->load($_COOKIE['MyIDP']);
+  		  }
+		  else {
 			$sp_name = 'default-sp';
 		  } // end if - elseif - else
 
   		  $this->_simplesaml_auth_simple = new SimpleSAML_Auth_Simple($sp_name);
   		  $this->_simplesaml_auth_attributes = $this->_simplesaml_auth_simple->getAttributes();
 	}
+
 	/**
 	 * Retrieves the specified attribute from the current SAML Assertion
 	 * most of the time this will be used to retrieve the mandatory attributes that
@@ -169,12 +178,14 @@ class SimpleSAML_Drupal {
 			} // end if
 			if (isset($this->_simplesaml_auth_attributes[$attr_name])) {
 				$attribute_assertion = $this->_simplesaml_auth_attributes[$attr_name][0];
-			} else {
+			}
+			else {
 				throw new Exception("Error in simplesamlphp_auth.module: The requested attribute {$attr_name} doesn't exists in the assertion");
 			} // end if - else
 		} // end if
 		return $attribute_assertion;
 	}
+
 	/**
 	 * Retrieves the attributes declared on the Drupal site for the corresponding IDP
 	 * @return stdClass With the properties loaded if the object exists ELSE void
@@ -185,6 +196,7 @@ class SimpleSAML_Drupal {
 		} // end if
 		return;
 	}
+
 	/**
 	 * Retrieves the SimpleSAML_Auth_Simple instance from the current object
 	 * this way we can use the object from outside without wrapping the simple SAML methods
@@ -197,6 +209,7 @@ class SimpleSAML_Drupal {
 		} // end if
 		return;
 	}
+
 	/**
 	 * Retrieves the version of the library currently used
 	 * @return string Indicating the version used at the moment, IF empty void is returned
@@ -207,6 +220,7 @@ class SimpleSAML_Drupal {
 		} // end if
 		return;
 	}
+
 	/**
 	 * Validates that everything that needs to be loaded is, before making any SAML requests
 	 * @param bool $watchdog - Keep track of function validation on watchdog, defaults to TRUE
@@ -233,6 +247,7 @@ class SimpleSAML_Drupal {
   		} // end if
 		return TRUE;
 	}
+
 	/**
 	 * Implements a variation of the factory method pattern that allow us to create
 	 * single instances of an object without having the disadvantages of the Singleton
