@@ -141,13 +141,16 @@ function _simplesaml_auth_user_register($authname) {
 
         /**
          * If you want, you can place more custom fields and populate them here
-         * @example
-         * if (isset($simplesamlphp_authsource->firstname)) {
-         *   $userinfo['field_first_name'] = array(
-         *     'und' => array(array('value' => $simplesamlphp_drupal->getAttrsFromAssertion($simplesamlphp_authsource->firstname)))
-         *   );
-         * }
          */
+        if (isset($simplesamlphp_authsource->custom_fields)) {
+          foreach($simplesamlphp_authsource->custom_fields as $custom_field_name) {
+            if (!empty($simplesamlphp_authsource->custom_fields->{$custom_field_name})) {
+              $userinfo[$custom_field_name] = array(
+                'und' => array(array('value' => $simplesamlphp_drupal->getAttrsFromAssertion($simplesamlphp_authsource->custom_fields->{$custom_field_name})))
+              );
+            } // end if
+          } // end foreach
+        } // end if
 
         $user = user_save($user, $userinfo);
         return $user;

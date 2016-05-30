@@ -132,8 +132,15 @@ class SimpleSAML_Drupal {
 			 	  foreach ($attributes as $key => $data) {
 					   if ($key == 'cs_fields') {
 						   foreach ($data as $additional_data) {
-							   $additional_data = explode(':', $additional_data);
-							   $this->_simplesaml_auth_source->{$additional_data[0]} = $additional_data[1];
+							   $additional_data = explode(':', $additional_data, 2);
+							   // Always look for index number one, that's the value of the custom field
+							   if (isset($additional_data[1]) && !empty($additional_data[1])) {
+								   // Wrap all custom fields around the custom fields property to access them later
+								   $this->_simplesaml_auth_source->custom_fields->{$additional_data[0]} = $additional_data[1];
+							   } else {
+								   watchdog('simplesamlphp_auth',
+									   'Unable to load custom field into the SAML object, verify that you\'re using the correct operator', array(), WATCHDOG_DEBUG);
+							   } // end if
 						   } // end foreach
       			 	   } // end if
 				 	   $this->_simplesaml_auth_source->{$key} = $data;
