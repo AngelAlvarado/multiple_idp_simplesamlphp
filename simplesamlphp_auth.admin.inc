@@ -257,7 +257,7 @@ function simplesamlphp_auth_form($form, &$form_state, $idp = NULL) {
     '#type' => 'textarea',
     '#title' => t('Additional attributes'),
     '#default_value' => isset($attributes['cs_fields']) && !empty($attributes['cs_fields']) ? implode('|', $attributes['ns_fields']) : '',
-    '#description' => t('A pipe separated list of attributes that would map to custom fields.<br />Example: <i>CustomField:SAMLattr|CustomField:SAMLattr...</i> <br />For instance: <i>firstname:userName|companyname:company</i>'),
+    '#description' => t('A pipe separated list of attributes that would map to custom fields (use the machine name of the field).<br />Example: <i>CustomField:SAMLattr|CustomField:SAMLattr...</i> <br />For instance: <i>field_firstname:userName|field_companyname:company</i>'),
   );
   $form['actions'] = array('#type' => 'actions');
   $form['simplesamlphp_auth_grp_user']['actions']['submit'] = array(
