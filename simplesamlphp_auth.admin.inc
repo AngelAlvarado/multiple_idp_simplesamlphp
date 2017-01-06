@@ -77,13 +77,15 @@ function simplesamlphp_auth_settings() {
     '#title' => t('Register users (i.e., auto-provisioning)'),
     '#default_value' => variable_get('simplesamlphp_auth_registerusers', TRUE),
     '#description' => t("Determines wether or not the module should automatically create/register new Drupal accounts for users that authenticate using SimpleSAMLphp. Unless you've done some custom work to provision Drupal accounts with the necessary authmap entries you will want this checked. NOTE: If unchecked each user must already have been provisioned a Drupal account with an appropriate entry in the authmap table before logging in. Otherwise they will receive a notice and be denied access. Be aware that simply creating a Drupal account will not create the necessary entry in the authmap table."),
-  );
+  );  
+   
   $form['simplesamlphp_auth_grp_auth'] = array(
     '#type' => 'fieldset',
     '#title' => t('Drupal Authentication'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
+  
   $form['simplesamlphp_auth_grp_auth']['simplesamlphp_auth_allowsetdrupalpwd'] = array(
     '#type' => 'checkbox',
     '#title' => t('Allow SAML users to set Drupal passwords.'),
@@ -152,7 +154,7 @@ function simplesamlphp_auth_idp_settings() {
   $output = array(
     'introduction' => array(
       '#markup' => '<p>The following table contains the active IDP domains on the system.</p>'
-    ),
+    ),      
     'table'   => array(
       '#theme'  => 'table',
       '#header' => array(
@@ -198,6 +200,8 @@ function _simplesamlphp_auth_idp_rows() {
  * @see ssaml_auth_load
  */
 function simplesamlphp_auth_form($form, &$form_state, $idp = NULL) {
+    
+  
   $form['simplesamlphp_auth_grp_user'] = array(
     '#type' => 'fieldset',
     '#title' => (NULL !== $idp && !empty($idp->id)) ? t('Edit IDP Settings') : t('Register new IDP Domain'),
@@ -253,12 +257,48 @@ function simplesamlphp_auth_form($form, &$form_state, $idp = NULL) {
     '#description' => t('Example: <i>mail</i><br />If the user attribute is multivalued, the first value will be used.'),
     '#required' => TRUE,
   );
+  $form['simplesamlphp_auth_grp_user']['simplesamlphp_auth_roleattr'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Which attribute from the IDP should be used as role identifier for the user'),
+    '#default_value' => isset($attributes['roleattr']) && !empty($attributes['roleattr']) ? $attributes['roleattr'] : '',
+    '#description' => t('Example: <i>roles</i><br />If the user attribute is multivalued, the first value will be used.'),
+    '#required' => FALSE,
+  );
+ 
   $form['simplesamlphp_auth_grp_user']['simplesamlphp_auth_csfields'] = array(
     '#type' => 'textarea',
     '#title' => t('Additional attributes'),
     '#default_value' => isset($attributes['cs_fields']) && !empty($attributes['cs_fields']) ? implode('|', $attributes['cs_fields']) : '',
     '#description' => t('A pipe separated list of attributes that would map to custom fields.<br />Example: <i>CustomField:SAMLattr|CustomField:SAMLattr...</i> <br />For instance: <i>firstname:userName|companyname:company</i>'),
   );
+  
+  // ROLE MAPPING OPTIONS  
+  $form['simplesamlphp_auth_grp_user']['simplesamlphp_auth_syncroles'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('<strong>Sync roles</strong>'),
+    '#default_value' => isset($attributes['syncroles']) && !empty($attributes['syncroles']) ? $attributes['syncroles'] : FALSE,
+    '#description' => t('<p>Auto-sync. The role of the Drupal user account will be synchronized with the data provided by the IdP.</p><p>Review the Mapping section.</p>'),
+    '#required' => FALSE
+  );
+ 
+  $form['simplesamlphp_auth_grp_user']['simplesamlphp_auth_role_mapping'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('ROLE MAPPING')
+  );
+
+  $form['simplesamlphp_auth_grp_user']['simplesamlphp_auth_role_mapping']['info'] = array(
+    '#markup' => t('<p>The IdP can use it\'s own roles. Set in this section the mapping between IdP and Drupal roles. Accepts multiple valued comma separated.</p>')
+  );
+
+  $form['simplesamlphp_auth_grp_user']['simplesamlphp_auth_role_mapping']['simplesamlphp_auth_role_mapping_administrator'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Administrator'),
+    '#default_value' => isset($attributes['rolemappattr']) && !empty($attributes['rolemappattr']) ? $attributes['rolemappattr'] : '',
+    '#required' => FALSE,
+    '#description' => t('Example: admin,owner,superuser.')
+  );
+  // ROLE MAPPING OPTIONS
+  
   $form['actions'] = array('#type' => 'actions');
   $form['simplesamlphp_auth_grp_user']['actions']['submit'] = array(
     '#type' => 'submit',
@@ -298,13 +338,16 @@ function simplesamlphp_auth_form_submit($form, &$form_state) {
     'username' => $form_state['values']['simplesamlphp_auth_user_name'],
     'unique_id' => $form_state['values']['simplesamlphp_auth_unique_id'],
     'mailattr' => $form_state['values']['simplesamlphp_auth_mailattr'],
+    'roleattr' => $form_state['values']['simplesamlphp_auth_roleattr'],    
+    'syncroles' => $form_state['values']['simplesamlphp_auth_syncroles'],
+    'rolemappattr' => $form_state['values']['simplesamlphp_auth_role_mapping_administrator'],
   );
   /**
    * Custome attributes are not mandatory
    */
   if (!empty( $form_state['values']['simplesamlphp_auth_csfields'])) {
     $attributes['cs_fields'] = explode('|', $form_state['values']['simplesamlphp_auth_csfields']);
-  } // end if
+  } // end if 
   $data['attributes'] = serialize($attributes);
   try {
     if (isset( $form_state['values']['simplesamlphp_auth_idp_id'] ) && (int) $form_state['values']['simplesamlphp_auth_idp_id'] > 0) {
@@ -355,6 +398,11 @@ function simplesamlphp_auth_form_validate($form, &$form_state) {
     if(!empty($check_domain)) {
       form_set_error('simplesamlphp_auth_domain', t('This domain name is already active on the system, please try a different one.'));
     } // end if
+    
+    if($form_state['values']['simplesamlphp_auth_syncroles'] && empty($form_state['values']['simplesamlphp_auth_role_mapping_administrator'])){
+        form_set_error('simplesamlphp_auth_role_mapping_administrator', t('Auto-sync field is checked, This field can not be empty.'));
+    }
+    
   } // end if
 }
 /**

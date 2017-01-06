@@ -136,7 +136,7 @@ function _simplesaml_auth_user_register($authname) {
         $userinfo = array(
           'name' => $simplesamlphp_drupal->getAttrsFromAssertion($simplesamlphp_authsource->username),
           'mail' => $simplesamlphp_drupal->getAttrsFromAssertion($simplesamlphp_authsource->mailattr),
-          'timezone' => 'America/New_York'
+          'timezone' => date_default_timezone_get(),
         );
 
         /**
@@ -148,8 +148,24 @@ function _simplesaml_auth_user_register($authname) {
          *   );
          * }
          */
-
-        $user = user_save($user, $userinfo);
+        
+        /**
+         * Populate roles 
+         */
+        
+        $roles = array();
+        // Calling all modules implementing hook_simplesamlphp_auth_user_roles_alter():
+        drupal_alter('simplesamlphp_auth_user_roles', $roles);
+        // You should implement hook_simplesamlphp_auth_user_roles_alter() in all other modules in which you want to alter $roles
+        if (!empty($roles)) {
+                try {
+                    $userinfo['roles']= $roles;
+                    
+                    $user = user_save($user, $userinfo);
+                } catch (Exception $e) {
+                    return FALSE;
+                }
+        }
         return $user;
       }
       else {
