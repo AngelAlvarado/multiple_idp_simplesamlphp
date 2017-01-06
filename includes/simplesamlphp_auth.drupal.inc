@@ -207,7 +207,7 @@ class SimpleSAML_Drupal {
         if (NULL !== $this->_simplesaml_auth_simple) {
             return $this->_simplesaml_auth_simple;
         } // end if
-        return;
+        return NULL;
     }
 
     /**
@@ -218,7 +218,7 @@ class SimpleSAML_Drupal {
         if (!empty($this->_simplesaml_auth_version)) {
             return $this->_simplesaml_auth_version;
         } // end if
-        return;
+        return NULL;
     }
 
     /**
