@@ -36,7 +36,7 @@ function simplesamlphp_auth_loginpage($sp = NULL) {
 
   module_load_include('inc', 'simplesamlphp_auth');
   // The user is not logged into Drupal.
-  if ($user->uid == 0) {
+  if ($user->uid == 0) {      
     _simplesaml_auth_login_register();
   }
   else {

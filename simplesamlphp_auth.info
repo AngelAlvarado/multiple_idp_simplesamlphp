@@ -4,3 +4,4 @@ core = 7.x
 configure = admin/config/people/simplesamlphp_auth
 version = "7.x-4.x-dev"
 project = "simplesamlphp_auth"
+files[] = tests/simplesamlphp_auth.test
