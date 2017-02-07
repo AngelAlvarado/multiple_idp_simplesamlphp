@@ -1,6 +1,7 @@
-name = simpleSAMLphp authentication
+name = Multiple IDP simpleSAMLphp authentication
 description = Allows users to authenticate to a remote SAML identity provider (IdP) via a locally configured SimpleSAMLphp service point (SP). This version of the module is able to handle multiple sources (IDP).
 core = 7.x
 configure = admin/config/people/simplesamlphp_auth
 version = "7.x-4.x-dev"
 project = "simplesamlphp_auth"
+files[] = tests/simplesamlphp_auth.test

@@ -26,7 +26,7 @@ function simplesamlphp_auth_loginpage($sp = NULL) {
     $simplesamlphp_drupal->load($sp);
   }
   catch (Exception $e) {
-    watchdog_exception('simplesamlphp_auth', $e);
+    watchdog_exception('simplesamlphp_auth', $e, $sp);
   } // End try - catch.
 
   $idp_st = !empty($simplesamlphp_drupal->getAuthSourceAttributes()) ? $simplesamlphp_drupal->getAuthSourceAttributes()->id : $sp;
@@ -36,7 +36,7 @@ function simplesamlphp_auth_loginpage($sp = NULL) {
 
   module_load_include('inc', 'simplesamlphp_auth');
   // The user is not logged into Drupal.
-  if ($user->uid == 0) {
+  if ($user->uid == 0) {      
     _simplesaml_auth_login_register();
   }
   else {
